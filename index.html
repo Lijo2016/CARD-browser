@@ -7,7 +7,9 @@
 <title>CARD Browser</title>
 
 <style>
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -47,7 +49,9 @@ button {
   cursor: pointer;
 }
 
-button:hover { background: #5880ff; }
+button:hover {
+  background: #5880ff;
+}
 
 button:disabled {
   opacity: .4;
@@ -146,7 +150,9 @@ button:disabled {
   font-size: 18px;
 }
 
-.close:hover { color: red; }
+.close:hover {
+  color: red;
+}
 
 #content {
   flex: 1;
@@ -163,7 +169,9 @@ iframe {
   background: white;
 }
 
-iframe.active { display: block; }
+iframe.active {
+  display: block;
+}
 
 #start, #error {
   height: 100%;
@@ -180,17 +188,26 @@ iframe.active { display: block; }
   background: #f2f3f7;
 }
 
-#start p { color: #777; }
+#start p {
+  color: #777;
+}
 
 #error {
   background: #20232c;
 }
 
-.hidden { display: none !important; }
+.hidden {
+  display: none !important;
+}
 
 @media(max-width:500px) {
-  #connect { margin-left: 0; }
-  .logo { font-size: 18px; }
+  #connect {
+    margin-left: 0;
+  }
+
+  .logo {
+    font-size: 18px;
+  }
 }
 </style>
 </head>
@@ -214,6 +231,7 @@ iframe.active { display: block; }
     >
     <button id="searchBtn" disabled>Megnyitás</button>
   </div>
+
   <div id="results" class="hidden"></div>
 </div>
 
@@ -250,6 +268,14 @@ const results = document.getElementById("results");
 const tabsElement = document.getElementById("tabs");
 const content = document.getElementById("content");
 
+// FÁJLSZŰRŐ
+function isValidHtml(name) {
+  return (
+    name.toLowerCase().endsWith(".html") &&
+    !name.startsWith("._")
+  );
+}
+
 // KÁRTYA KIVÁLASZTÁSA
 async function connectCard() {
 
@@ -270,12 +296,11 @@ async function connectCard() {
       directory = handle;
       files = [];
 
-      // A KÁRTYA GYÖKÉRKÖNYVTÁRÁNAK OLVASÁSA
       for await (const [name, entry] of directory.entries()) {
 
         if (
           entry.kind === "file" &&
-          name.toLowerCase().endsWith(".html")
+          isValidHtml(name)
         ) {
           files.push({
             name,
@@ -319,7 +344,7 @@ async function connectCard() {
     if (!paths.length) {
       disconnect();
       alert(
-        "Ez a Firefox nem adott mappaútvonalat. " +
+        "A Firefox nem adott mappaútvonalat. " +
         "Próbálj friss Firefox-verziót használni."
       );
       return;
@@ -337,14 +362,15 @@ async function connectCard() {
 
     files = [];
 
-    // CSAK A KÁRTYA GYÖKÉRKÖNYVTÁRÁBAN LÉVŐ HTML-EK
+    // CSAK A CARD GYÖKÉRKÖNYVTÁRÁNAK HTML-FÁJLJAI
+    // A ._ kezdetű fájlokat kihagyjuk.
     for (const file of selected) {
 
       const path = file.webkitRelativePath.split("/");
 
       if (
         path.length === 2 &&
-        file.name.toLowerCase().endsWith(".html")
+        isValidHtml(file.name)
       ) {
         files.push({
           name: file.name,
@@ -368,10 +394,12 @@ function cardReady() {
   document.getElementById("start").classList.add("hidden");
   document.getElementById("error").classList.add("hidden");
 
-  status.textContent = "● CARD csatlakoztatva – " + files.length + " HTML";
+  status.textContent =
+    "● CARD csatlakoztatva – " + files.length + " HTML";
 
   search.disabled = false;
   search.placeholder = "🔍 Keress a CARD HTML-fájljai között...";
+
   document.getElementById("searchBtn").disabled = false;
 
   search.value = "";
@@ -379,12 +407,11 @@ function cardReady() {
   renderResults();
 
   if (!files.length) {
-    showStart(
-      "A CARD kártyán nem található HTML-fájl."
-    );
+    showStart("A CARD kártyán nem található HTML-fájl.");
   } else {
     showStart(
-      files.length + " HTML-fájl található a CARD kártyán. Keress rá valamelyikre!"
+      files.length +
+      " HTML-fájl található a CARD kártyán. Keress rá valamelyikre!"
     );
   }
 }
@@ -401,6 +428,7 @@ function disconnect() {
   search.value = "";
   search.disabled = true;
   search.placeholder = "Először csatlakoztasd a CARD-ot!";
+
   document.getElementById("searchBtn").disabled = true;
 
   results.classList.add("hidden");
@@ -419,10 +447,14 @@ function showStart(message) {
   const start = document.getElementById("start");
 
   start.classList.remove("hidden");
-  start.innerHTML = `
-    <h1>🌐 CARD Browser</h1>
-    <p>${message}</p>
-  `;
+
+  const heading = document.createElement("h1");
+  heading.textContent = "🌐 CARD Browser";
+
+  const paragraph = document.createElement("p");
+  paragraph.textContent = message;
+
+  start.replaceChildren(heading, paragraph);
 }
 
 // KERESÉS
@@ -438,14 +470,17 @@ function renderResults() {
   }
 
   const matches = files.filter(file =>
+    isValidHtml(file.name) &&
     file.name.toLowerCase().includes(query)
   );
 
   if (!matches.length) {
 
-    results.innerHTML = `
-      <div class="result">Nincs ilyen HTML-fájl.</div>
-    `;
+    const item = document.createElement("div");
+    item.className = "result";
+    item.textContent = "Nincs ilyen HTML-fájl.";
+
+    results.appendChild(item);
 
   } else {
 
@@ -455,8 +490,8 @@ function renderResults() {
       item.className = "result";
 
       const name = document.createElement("div");
-      name.textContent = "📄 " +
-        file.name.replace(/\.html$/i, "");
+      name.textContent =
+        "📄 " + file.name.replace(/\.html$/i, "");
 
       const hint = document.createElement("small");
       hint.textContent = file.name;
@@ -490,6 +525,7 @@ search.addEventListener("keydown", event => {
 
 document.getElementById("searchBtn").onclick = openFirstMatch;
 
+// ELSŐ TALÁLAT MEGNYITÁSA
 function openFirstMatch() {
 
   if (!connected) return;
@@ -502,6 +538,7 @@ function openFirstMatch() {
     file.name.toLowerCase() === query ||
     file.name.toLowerCase() === query + ".html"
   ) || files.find(file =>
+    isValidHtml(file.name) &&
     file.name.toLowerCase().includes(query)
   );
 
@@ -516,7 +553,7 @@ function openFirstMatch() {
 // HTML MEGNYITÁSA
 async function openFile(fileInfo) {
 
-  if (!connected) return;
+  if (!connected || !isValidHtml(fileInfo.name)) return;
 
   const existing = tabs.find(t => t.name === fileInfo.name);
 
@@ -565,7 +602,7 @@ async function openFile(fileInfo) {
   }
 }
 
-// FÜLEK
+// FÜLEK MEGJELENÍTÉSE
 function renderTabs() {
 
   tabsElement.innerHTML = "";
@@ -596,6 +633,7 @@ function renderTabs() {
   });
 }
 
+// AKTÍV LAP
 function activateTab(id) {
 
   activeTab = id;
@@ -607,6 +645,7 @@ function activateTab(id) {
   renderTabs();
 }
 
+// LAP BEZÁRÁSA
 function closeTab(id) {
 
   const index = tabs.findIndex(tab => tab.id === id);
@@ -625,6 +664,7 @@ function closeTab(id) {
   }
 }
 
+// ÖSSZES LAP BEZÁRÁSA
 function closeAll() {
 
   tabs.forEach(tab => tab.frame.remove());
@@ -635,6 +675,7 @@ function closeAll() {
   renderTabs();
 }
 
+// CSATLAKOZTATÁS
 document.getElementById("connect").onclick = connectCard;
 
 </script>
