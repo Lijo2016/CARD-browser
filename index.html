@@ -21,7 +21,7 @@ body {
 
 header {
   background: #222630;
-  padding: 13px;
+  padding: 14px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -29,51 +29,110 @@ header {
 }
 
 .logo {
-  font-size: 20px;
+  font-size: 21px;
   font-weight: bold;
 }
 
 #status {
-  font-size: 12px;
   color: #aaa;
+  font-size: 12px;
+}
+
+button {
+  border: 0;
+  border-radius: 7px;
+  padding: 10px 15px;
+  background: #426be8;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover { background: #5880ff; }
+
+button:disabled {
+  opacity: .4;
+  cursor: not-allowed;
 }
 
 #connect {
   margin-left: auto;
 }
 
-button {
-  background: #426be8;
+.search-area {
+  background: #252a35;
+  padding: 12px;
+  position: relative;
+}
+
+.search-row {
+  display: flex;
+  gap: 8px;
+}
+
+#search {
+  flex: 1;
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid #414958;
+  border-radius: 8px;
+  background: #171b24;
   color: white;
-  border: 0;
-  padding: 9px 14px;
-  border-radius: 6px;
+  font-size: 16px;
+  outline: none;
+}
+
+#search:focus {
+  border-color: #5880ff;
+}
+
+#results {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% - 5px);
+  left: 12px;
+  right: 12px;
+  background: #303644;
+  border-radius: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: 0 5px 15px #0008;
+}
+
+.result {
+  padding: 13px;
+  border-bottom: 1px solid #414958;
   cursor: pointer;
 }
 
-button:hover { background: #5880ff; }
-button:disabled { opacity: .4; cursor: not-allowed; }
+.result:hover {
+  background: #414b61;
+}
+
+.result small {
+  color: #aaa;
+}
 
 #tabs {
   display: flex;
-  align-items: end;
-  overflow-x: auto;
-  min-height: 45px;
-  padding: 5px 5px 0;
   gap: 4px;
+  align-items: end;
+  min-height: 44px;
+  overflow-x: auto;
+  padding: 5px 5px 0;
+  background: #17191f;
 }
 
 .tab {
-  background: #292d37;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 100px;
+  max-width: 200px;
   padding: 12px;
   border-radius: 8px 8px 0 0;
-  min-width: 100px;
-  max-width: 190px;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  cursor: pointer;
+  background: #292d37;
   color: #bbb;
+  cursor: pointer;
   white-space: nowrap;
 }
 
@@ -89,12 +148,6 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 
 .close:hover { color: red; }
 
-#add {
-  margin: 5px;
-  font-size: 20px;
-  padding: 4px 12px;
-}
-
 #content {
   flex: 1;
   min-height: 0;
@@ -103,10 +156,10 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 }
 
 iframe {
+  display: none;
   width: 100%;
   height: 100%;
   border: 0;
-  display: none;
   background: white;
 }
 
@@ -123,21 +176,21 @@ iframe.active { display: block; }
 }
 
 #start {
-  background: #f2f3f7;
   color: #333;
+  background: #f2f3f7;
 }
 
 #start p { color: #777; }
 
 #error {
   background: #20232c;
-  color: white;
 }
 
 .hidden { display: none !important; }
 
 @media(max-width:500px) {
   #connect { margin-left: 0; }
+  .logo { font-size: 18px; }
 }
 </style>
 </head>
@@ -146,25 +199,37 @@ iframe.active { display: block; }
 
 <header>
   <div class="logo">🌐 CARD Browser</div>
-  <div id="status">Nincs CARD csatlakoztatva</div>
-  <button id="connect">CARD kiválasztása</button>
+  <div id="status">Nincs kártya csatlakoztatva</div>
+  <button id="connect">SD-kártya kiválasztása</button>
 </header>
 
-<div id="tabs">
-  <button id="add" disabled>+</button>
+<div class="search-area">
+  <div class="search-row">
+    <input
+      id="search"
+      type="search"
+      placeholder="🔍 Mit szeretnél megnyitni?"
+      autocomplete="off"
+      disabled
+    >
+    <button id="searchBtn" disabled>Megnyitás</button>
+  </div>
+  <div id="results" class="hidden"></div>
 </div>
+
+<div id="tabs"></div>
 
 <div id="content">
 
   <div id="start">
     <h1>🌐 CARD Browser</h1>
-    <p>Csatlakoztasd a CARD nevű SD-kártyát!</p>
-    <button onclick="connectCard()">Csatlakoztatás</button>
+    <p>Először válaszd ki a CARD SD-kártyát!</p>
+    <button onclick="connectCard()">Kártya kiválasztása</button>
   </div>
 
   <div id="error" class="hidden">
-    <h2>⚠️ CARD nem található!</h2>
-    <p>Válaszd ki a CARD nevű SD-kártya mappáját!</p>
+    <h2>⚠️ Nincs CARD csatlakoztatva</h2>
+    <p>Csatlakoztasd az SD-kártyát, majd próbáld újra!</p>
     <button onclick="connectCard()">Újrapróbálás</button>
   </div>
 
@@ -174,78 +239,61 @@ iframe.active { display: block; }
 "use strict";
 
 let directory = null;
+let files = [];
 let tabs = [];
 let activeTab = null;
-let firefoxFiles = new Map();
-let cardReady = false;
+let connected = false;
 
-const tabBar = document.getElementById("tabs");
+const status = document.getElementById("status");
+const search = document.getElementById("search");
+const results = document.getElementById("results");
+const tabsElement = document.getElementById("tabs");
 const content = document.getElementById("content");
-const addButton = document.getElementById("add");
-const statusText = document.getElementById("status");
 
-function showError(message = "CARD nem található!") {
-  cardReady = false;
-  directory = null;
-  firefoxFiles.clear();
-  closeAll();
-
-  document.getElementById("start").classList.add("hidden");
-
-  const error = document.getElementById("error");
-  error.classList.remove("hidden");
-  error.querySelector("p").textContent = message;
-
-  statusText.textContent = "Nincs CARD";
-  addButton.disabled = true;
-}
-
-function enableBrowser() {
-  cardReady = true;
-
-  document.getElementById("start").classList.add("hidden");
-  document.getElementById("error").classList.add("hidden");
-
-  statusText.textContent = "● CARD csatlakoztatva";
-  addButton.disabled = false;
-}
-
-function showEmpty() {
-  document.getElementById("start").classList.remove("hidden");
-  document.getElementById("error").classList.add("hidden");
-
-  document.getElementById("start").innerHTML =
-    "<h1>📂 CARD</h1><p>Nem található megnyitható HTML-fájl.</p>";
-}
-
-// CARD CSATLAKOZTATÁSA
+// KÁRTYA KIVÁLASZTÁSA
 async function connectCard() {
 
   // CHROME / EDGE
   if (typeof window.showDirectoryPicker === "function") {
 
     try {
-      const handle = await window.showDirectoryPicker();
+      const handle = await window.showDirectoryPicker({
+        mode: "read"
+      });
 
       if (handle.name.toUpperCase() !== "CARD") {
-        showError("A kiválasztott mappa neve nem CARD!");
+        disconnect();
+        alert("A kiválasztott SD-kártya neve CARD legyen!");
         return;
       }
 
       directory = handle;
-      firefoxFiles.clear();
+      files = [];
 
-      enableBrowser();
+      // A KÁRTYA GYÖKÉRKÖNYVTÁRÁNAK OLVASÁSA
+      for await (const [name, entry] of directory.entries()) {
 
-      await loadDirectory();
-      return;
-
-    } catch (error) {
-      if (error.name !== "AbortError") {
-        showError("Nem sikerült megnyitni a mappát.");
+        if (
+          entry.kind === "file" &&
+          name.toLowerCase().endsWith(".html")
+        ) {
+          files.push({
+            name,
+            handle: entry
+          });
+        }
       }
-      return;
+
+      connected = true;
+      cardReady();
+
+    } catch (e) {
+      if (e.name !== "AbortError") {
+        alert("Nem sikerült beolvasni a kártyát: " + e.message);
+      }
     }
+
+    return;
   }
 
   // FIREFOX
@@ -255,87 +303,222 @@ async function connectCard() {
   picker.multiple = true;
   picker.setAttribute("webkitdirectory", "");
 
-  picker.onchange = async function() {
+  picker.onchange = () => {
 
-    const files = Array.from(picker.files);
+    const selected = Array.from(picker.files);
 
-    if (!files.length) {
-      showError("Nem választottál ki fájlokat.");
+    if (!selected.length) {
+      disconnect();
       return;
     }
 
-    // A mappa nevét a relatív útvonalból olvassuk.
-    const paths = files
-      .map(file => file.webkitRelativePath)
-      .filter(path => path && path.includes("/"));
+    const paths = selected
+      .map(f => f.webkitRelativePath)
+      .filter(Boolean);
 
     if (!paths.length) {
-      showError(
-        "A Firefox nem adott mappaútvonalat. " +
-        "Válaszd ki a CARD mappát mappaként, ne fájlként."
+      disconnect();
+      alert(
+        "Ez a Firefox nem adott mappaútvonalat. " +
+        "Próbálj friss Firefox-verziót használni."
       );
       return;
     }
 
-    const roots = new Set(
+    const roots = [...new Set(
       paths.map(path => path.split("/")[0].toUpperCase())
-    );
+    )];
 
-    if (roots.size !== 1 || !roots.has("CARD")) {
-      showError("A kiválasztott mappa neve CARD legyen!");
+    if (roots.length !== 1 || roots[0] !== "CARD") {
+      disconnect();
+      alert("A kiválasztott kártya neve CARD legyen!");
       return;
     }
 
-    firefoxFiles.clear();
+    files = [];
 
-    for (const file of files) {
-      if (file.name.toLowerCase().endsWith(".html")) {
-        firefoxFiles.set(file.name, file);
+    // CSAK A KÁRTYA GYÖKÉRKÖNYVTÁRÁBAN LÉVŐ HTML-EK
+    for (const file of selected) {
+
+      const path = file.webkitRelativePath.split("/");
+
+      if (
+        path.length === 2 &&
+        file.name.toLowerCase().endsWith(".html")
+      ) {
+        files.push({
+          name: file.name,
+          handle: file
+        });
       }
     }
 
     directory = null;
+    connected = true;
 
-    enableBrowser();
-    closeAll();
-
-    for (const [name, file] of firefoxFiles) {
-      await openFile(name, file);
-    }
-
-    if (!tabs.length) showEmpty();
+    cardReady();
   };
 
   picker.click();
 }
 
-// CHROME / EDGE FÁJLOK BETÖLTÉSE
-async function loadDirectory() {
-  closeAll();
+// SIKERES CSATLAKOZTATÁS
+function cardReady() {
 
-  try {
-    for await (const [name, handle] of directory.entries()) {
-      if (
-        handle.kind === "file" &&
-        name.toLowerCase().endsWith(".html")
-      ) {
-        await openFile(name, handle);
-      }
-    }
+  document.getElementById("start").classList.add("hidden");
+  document.getElementById("error").classList.add("hidden");
 
-    if (!tabs.length) showEmpty();
+  status.textContent = "● CARD csatlakoztatva – " + files.length + " HTML";
 
-  } catch (error) {
-    showError("Nem sikerült olvasni a CARD tartalmát.");
+  search.disabled = false;
+  search.placeholder = "🔍 Keress a CARD HTML-fájljai között...";
+  document.getElementById("searchBtn").disabled = false;
+
+  search.value = "";
+
+  renderResults();
+
+  if (!files.length) {
+    showStart(
+      "A CARD kártyán nem található HTML-fájl."
+    );
+  } else {
+    showStart(
+      files.length + " HTML-fájl található a CARD kártyán. Keress rá valamelyikre!"
+    );
   }
 }
 
+// LECSATLAKOZTATÁS
+function disconnect() {
+
+  connected = false;
+  directory = null;
+  files = [];
+
+  closeAll();
+
+  search.value = "";
+  search.disabled = true;
+  search.placeholder = "Először csatlakoztasd a CARD-ot!";
+  document.getElementById("searchBtn").disabled = true;
+
+  results.classList.add("hidden");
+
+  status.textContent = "Nincs CARD";
+
+  document.getElementById("start").classList.add("hidden");
+  document.getElementById("error").classList.remove("hidden");
+}
+
+// KEZDŐOLDAL
+function showStart(message) {
+
+  document.getElementById("error").classList.add("hidden");
+
+  const start = document.getElementById("start");
+
+  start.classList.remove("hidden");
+  start.innerHTML = `
+    <h1>🌐 CARD Browser</h1>
+    <p>${message}</p>
+  `;
+}
+
+// KERESÉS
+function renderResults() {
+
+  const query = search.value.trim().toLowerCase();
+
+  results.innerHTML = "";
+
+  if (!connected || !query) {
+    results.classList.add("hidden");
+    return;
+  }
+
+  const matches = files.filter(file =>
+    file.name.toLowerCase().includes(query)
+  );
+
+  if (!matches.length) {
+
+    results.innerHTML = `
+      <div class="result">Nincs ilyen HTML-fájl.</div>
+    `;
+
+  } else {
+
+    matches.forEach(file => {
+
+      const item = document.createElement("div");
+      item.className = "result";
+
+      const name = document.createElement("div");
+      name.textContent = "📄 " +
+        file.name.replace(/\.html$/i, "");
+
+      const hint = document.createElement("small");
+      hint.textContent = file.name;
+
+      item.append(name, hint);
+
+      item.onclick = () => {
+        openFile(file);
+        results.classList.add("hidden");
+      };
+
+      results.appendChild(item);
+    });
+  }
+
+  results.classList.remove("hidden");
+}
+
+search.addEventListener("input", renderResults);
+
+search.addEventListener("keydown", event => {
+
+  if (event.key === "Enter") {
+    openFirstMatch();
+  }
+
+  if (event.key === "Escape") {
+    results.classList.add("hidden");
+  }
+});
+
+document.getElementById("searchBtn").onclick = openFirstMatch;
+
+function openFirstMatch() {
+
+  if (!connected) return;
+
+  const query = search.value.trim().toLowerCase();
+
+  if (!query) return;
+
+  const match = files.find(file =>
+    file.name.toLowerCase() === query ||
+    file.name.toLowerCase() === query + ".html"
+  ) || files.find(file =>
+    file.name.toLowerCase().includes(query)
+  );
+
+  if (!match) {
+    alert("Nem található ilyen HTML-fájl!");
+    return;
+  }
+
+  openFile(match);
+}
+
 // HTML MEGNYITÁSA
-async function openFile(name, handle) {
+async function openFile(fileInfo) {
 
-  if (!cardReady) return;
+  if (!connected) return;
 
-  const existing = tabs.find(tab => tab.name === name);
+  const existing = tabs.find(t => t.name === fileInfo.name);
 
   if (existing) {
     activateTab(existing.id);
@@ -343,13 +526,12 @@ async function openFile(name, handle) {
   }
 
   try {
-    const file = handle instanceof File
-      ? handle
-      : await handle.getFile();
+
+    const file = fileInfo.handle instanceof File
+      ? fileInfo.handle
+      : await fileInfo.handle.getFile();
 
     const html = await file.text();
-
-    const id = Date.now() + Math.random();
 
     const frame = document.createElement("iframe");
 
@@ -360,12 +542,14 @@ async function openFile(name, handle) {
 
     frame.srcdoc = html;
 
+    const id = Date.now() + Math.random();
+
     content.appendChild(frame);
 
     tabs.push({
       id,
-      name,
-      title: name.replace(/\.html$/i, ""),
+      name: fileInfo.name,
+      title: fileInfo.name.replace(/\.html$/i, ""),
       frame
     });
 
@@ -373,15 +557,18 @@ async function openFile(name, handle) {
 
     activateTab(id);
 
-  } catch (error) {
-    alert("Hiba a fájl megnyitásakor: " + name);
+    search.value = "";
+    results.classList.add("hidden");
+
+  } catch (e) {
+    alert("Nem sikerült megnyitni: " + fileInfo.name);
   }
 }
 
-// LAPOK KIRAJZOLÁSA
+// FÜLEK
 function renderTabs() {
 
-  document.querySelectorAll(".tab").forEach(tab => tab.remove());
+  tabsElement.innerHTML = "";
 
   tabs.forEach(tab => {
 
@@ -405,12 +592,10 @@ function renderTabs() {
     element.onclick = () => activateTab(tab.id);
 
     element.append(title, close);
-
-    tabBar.insertBefore(element, addButton);
+    tabsElement.appendChild(element);
   });
 }
 
-// LAP AKTIVÁLÁSA
 function activateTab(id) {
 
   activeTab = id;
@@ -422,27 +607,24 @@ function activateTab(id) {
   renderTabs();
 }
 
-// LAP BEZÁRÁSA
 function closeTab(id) {
 
   const index = tabs.findIndex(tab => tab.id === id);
 
-  if (index === -1) return;
+  if (index < 0) return;
 
   tabs[index].frame.remove();
   tabs.splice(index, 1);
 
   if (tabs.length) {
-    activeTab = tabs[Math.min(index, tabs.length - 1)].id;
-    activateTab(activeTab);
+    activateTab(tabs[Math.min(index, tabs.length - 1)].id);
   } else {
     activeTab = null;
     renderTabs();
-    showEmpty();
+    showStart("Válassz egy HTML-fájlt a keresőből!");
   }
 }
 
-// ÖSSZES LAP BEZÁRÁSA
 function closeAll() {
 
   tabs.forEach(tab => tab.frame.remove());
@@ -452,30 +634,6 @@ function closeAll() {
 
   renderTabs();
 }
-
-// ÚJ HTML MEGNYITÁSA
-addButton.onclick = async function() {
-
-  if (!cardReady) {
-    showError();
-    return;
-  }
-
-  const picker = document.createElement("input");
-
-  picker.type = "file";
-  picker.accept = ".html";
-  picker.multiple = true;
-
-  picker.onchange = async function() {
-
-    for (const file of picker.files) {
-      await openFile(file.name, file);
-    }
-  };
-
-  picker.click();
-};
 
 document.getElementById("connect").onclick = connectCard;
 
