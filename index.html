@@ -1,0 +1,318 @@
+
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CARD Browser</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #17191f;
+  color: white;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+header {
+  background: #222630;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo { font-size: 20px; font-weight: bold; }
+#status { color: #aaa; font-size: 12px; }
+#tabs {
+  display: flex;
+  background: #17191f;
+  overflow-x: auto;
+  min-height: 45px;
+  align-items: end;
+  padding: 5px 5px 0;
+  gap: 4px;
+}
+.tab {
+  background: #292d37;
+  padding: 12px 10px;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  min-width: 100px;
+  max-width: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #bbb;
+}
+.tab.active { background: #353b49; color: white; }
+.close { color: #aaa; font-size: 18px; }
+.close:hover { color: red; }
+button {
+  border: 0;
+  border-radius: 6px;
+  padding: 9px 14px;
+  background: #426be8;
+  color: white;
+  cursor: pointer;
+}
+button:hover { background: #5880ff; }
+#add { margin: 5px; font-size: 20px; padding: 4px 12px; }
+#content {
+  flex: 1;
+  background: white;
+  position: relative;
+}
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: none;
+  background: white;
+}
+iframe.active { display: block; }
+#start, #error {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #333;
+  text-align: center;
+  padding: 25px;
+}
+#start { background: #f2f3f7; }
+#error { background: #20232c; color: white; }
+#error button { margin-top: 15px; }
+#start h1 { font-size: 38px; }
+#start p { color: #777; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🌐 CARD Browser</div>
+  <div id="status">Nincs SD-kártya kiválasztva</div>
+  <div style="margin-left:auto">
+    <button id="connect">CARD csatlakoztatása</button>
+  </div>
+</header>
+
+<div id="tabs">
+  <button id="add" title="HTML hozzáadása" disabled>+</button>
+</div>
+
+<div id="content">
+  <div id="start">
+    <h1>🌐 CARD Browser</h1>
+    <p>A használathoz csatlakoztasd a CARD nevű SD-kártyát!</p>
+    <button onclick="connectCard()">SD-kártya kiválasztása</button>
+  </div>
+  <div id="error" class="hidden">
+    <h2>⚠️ CARD nem található!</h2>
+    <p>A böngésző használatához szükség van a CARD nevű SD-kártyára.</p>
+    <button onclick="connectCard()">Újrapróbálás</button>
+  </div>
+</div>
+
+<script>
+let directory = null;
+let tabs = [];
+let activeTab = null;
+
+const tabBar = document.getElementById("tabs");
+const content = document.getElementById("content");
+const addButton = document.getElementById("add");
+const statusText = document.getElementById("status");
+
+async function connectCard() {
+  if (!window.showDirectoryPicker) {
+    alert("Ehhez a böngészőhöz nem érhető el a mappaválasztás. Használj friss Chrome vagy Edge böngészőt.");
+    return;
+  }
+
+  try {
+    const handle = await window.showDirectoryPicker();
+
+    if (handle.name !== "CARD") {
+      directory = null;
+      showError();
+      alert("A kiválasztott mappa neve nem CARD!");
+      return;
+    }
+
+    directory = handle;
+    document.getElementById("start").classList.add("hidden");
+    document.getElementById("error").classList.add("hidden");
+    statusText.textContent = "● CARD csatlakoztatva";
+    addButton.disabled = false;
+
+    await loadFiles();
+
+  } catch (e) {
+    if (e.name !== "AbortError") {
+      alert("Nem sikerült megnyitni a kártyát.");
+    }
+  }
+}
+
+function showError() {
+  document.getElementById("start").classList.add("hidden");
+  document.getElementById("error").classList.remove("hidden");
+  statusText.textContent = "Nincs CARD";
+  addButton.disabled = true;
+}
+
+async function loadFiles() {
+  closeAll();
+
+  for await (const [name, handle] of directory.entries()) {
+    if (handle.kind === "file" && name.toLowerCase().endsWith(".html")) {
+      await openFile(name, handle);
+    }
+  }
+
+  if (!tabs.length) {
+    document.getElementById("start").classList.remove("hidden");
+    document.getElementById("start").innerHTML =
+      "<h1>📂 CARD</h1><p>Nem található HTML-fájl a kártyán.</p>";
+  }
+}
+
+async function openFile(name, handle) {
+  if (!directory) return;
+
+  if (tabs.some(t => t.name === name)) {
+    activateTab(tabs.find(t => t.name === name).id);
+    return;
+  }
+
+  const file = await handle.getFile();
+  const html = await file.text();
+
+  const id = Date.now() + Math.random();
+
+  const frame = document.createElement("iframe");
+  frame.setAttribute("sandbox", "allow-scripts allow-forms allow-modals");
+  frame.srcdoc = html;
+  content.appendChild(frame);
+
+  const tab = {
+    id,
+    name,
+    title: name.replace(/\.html$/i, ""),
+    frame
+  };
+
+  tabs.push(tab);
+  renderTabs();
+  activateTab(id);
+}
+
+function renderTabs() {
+  document.querySelectorAll(".tab").forEach(t => t.remove());
+
+  tabs.forEach(tab => {
+    const el = document.createElement("div");
+    el.className = "tab" + (tab.id === activeTab ? " active" : "");
+
+    const title = document.createElement("span");
+    title.textContent = tab.title;
+    title.onclick = () => activateTab(tab.id);
+
+    const close = document.createElement("span");
+    close.className = "close";
+    close.textContent = "×";
+    close.onclick = e => {
+      e.stopPropagation();
+      closeTab(tab.id);
+    };
+
+    el.onclick = () => activateTab(tab.id);
+    el.append(title, close);
+    tabBar.insertBefore(el, addButton);
+  });
+}
+
+function activateTab(id) {
+  activeTab = id;
+
+  tabs.forEach(t => {
+    t.frame.classList.toggle("active", t.id === id);
+  });
+
+  renderTabs();
+}
+
+function closeTab(id) {
+  const index = tabs.findIndex(t => t.id === id);
+  if (index < 0) return;
+
+  tabs[index].frame.remove();
+  tabs.splice(index, 1);
+
+  if (activeTab === id) {
+    activeTab = tabs.length
+      ? tabs[Math.min(index, tabs.length - 1)].id
+      : null;
+  }
+
+  if (activeTab !== null) activateTab(activeTab);
+  else {
+    renderTabs();
+    document.getElementById("start").classList.remove("hidden");
+    document.getElementById("start").innerHTML =
+      "<h1>🌐 CARD Browser</h1><p>Válassz egy HTML-lapot a megnyitáshoz!</p>";
+  }
+}
+
+function closeAll() {
+  tabs.forEach(t => t.frame.remove());
+  tabs = [];
+  activeTab = null;
+  renderTabs();
+}
+
+addButton.onclick = async () => {
+  if (!directory) {
+    showError();
+    return;
+  }
+
+  const files = [];
+
+  for await (const [name, handle] of directory.entries()) {
+    if (handle.kind === "file" && name.toLowerCase().endsWith(".html")) {
+      files.push({ name, handle });
+    }
+  }
+
+  if (!files.length) {
+    alert("Nincs HTML-fájl a CARD kártyán!");
+    return;
+  }
+
+  const choice = prompt(
+    "Melyik HTML-fájlt szeretnéd megnyitni?\n\n" +
+    files.map((f, i) => (i + 1) + ". " + f.name).join("\n")
+  );
+
+  if (choice === null) return;
+
+  const index = Number(choice) - 1;
+
+  if (Number.isInteger(index) && files[index]) {
+    await openFile(files[index].name, files[index].handle);
+  } else {
+    alert("Érvénytelen választás!");
+  }
+};
+
+document.getElementById("connect").onclick = connectCard;
+</script>
+
+</body>
+</html>
