@@ -225,7 +225,7 @@ iframe.active {
     <input
       id="search"
       type="search"
-      placeholder="🔍 Mit szeretnél megnyitni?"
+      placeholder="🔍 Keresés"
       autocomplete="off"
       disabled
     >
@@ -241,14 +241,14 @@ iframe.active {
 
   <div id="start">
     <h1>🌐 CARD Browser</h1>
-    <p>Először válaszd ki a CARD SD-kártyát!</p>
+    <p>Válasszon SD-kártyát</p>
     <button onclick="connectCard()">Kártya kiválasztása</button>
   </div>
 
   <div id="error" class="hidden">
     <h2>⚠️ Nincs CARD csatlakoztatva</h2>
     <p>Csatlakoztasd az SD-kártyát, majd próbáld újra!</p>
-    <button onclick="connectCard()">Újrapróbálás</button>
+    <button onclick="connectCard()">Újrapróbálkozás</button>
   </div>
 
 </div>
@@ -289,7 +289,7 @@ async function connectCard() {
 
       if (handle.name.toUpperCase() !== "CARD") {
         disconnect();
-        alert("A kiválasztott SD-kártya neve CARD legyen!");
+        alert("A kiválasztott kártya nem megfelelő!");
         return;
       }
 
@@ -356,7 +356,7 @@ async function connectCard() {
 
     if (roots.length !== 1 || roots[0] !== "CARD") {
       disconnect();
-      alert("A kiválasztott kártya neve CARD legyen!");
+      alert("A kiválasztott kártya nem megfelelő!");
       return;
     }
 
@@ -398,7 +398,7 @@ function cardReady() {
     "● CARD csatlakoztatva – " + files.length + " HTML";
 
   search.disabled = false;
-  search.placeholder = "🔍 Keress a CARD HTML-fájljai között...";
+  search.placeholder = "🔍 Keresés";
 
   document.getElementById("searchBtn").disabled = false;
 
@@ -407,11 +407,11 @@ function cardReady() {
   renderResults();
 
   if (!files.length) {
-    showStart("A CARD kártyán nem található HTML-fájl.");
+    showStart("A kártya nem megfelelő.");
   } else {
     showStart(
       files.length +
-      " HTML-fájl található a CARD kártyán. Keress rá valamelyikre!"
+      " HTML-fájl található a CARD kártyán."
     );
   }
 }
@@ -427,7 +427,7 @@ function disconnect() {
 
   search.value = "";
   search.disabled = true;
-  search.placeholder = "Először csatlakoztasd a CARD-ot!";
+  search.placeholder = "Csatlakoztasd a CARD-ot!";
 
   document.getElementById("searchBtn").disabled = true;
 
@@ -478,7 +478,7 @@ function renderResults() {
 
     const item = document.createElement("div");
     item.className = "result";
-    item.textContent = "Nincs ilyen HTML-fájl.";
+    item.textContent = "Nincs találat.";
 
     results.appendChild(item);
 
@@ -543,7 +543,7 @@ function openFirstMatch() {
   );
 
   if (!match) {
-    alert("Nem található ilyen HTML-fájl!");
+    alert("Nincs találat!");
     return;
   }
 
@@ -598,7 +598,7 @@ async function openFile(fileInfo) {
     results.classList.add("hidden");
 
   } catch (e) {
-    alert("Nem sikerült megnyitni: " + fileInfo.name);
+    alert("A megnyitás sikertelen: " + fileInfo.name);
   }
 }
 
@@ -660,7 +660,7 @@ function closeTab(id) {
   } else {
     activeTab = null;
     renderTabs();
-    showStart("Válassz egy HTML-fájlt a keresőből!");
+    showStart("Válassz a keresőből!");
   }
 }
 
