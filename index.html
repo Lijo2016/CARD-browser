@@ -247,7 +247,7 @@ iframe.active {
 
   <div id="error" class="hidden">
     <h2>⚠️ Nincs CARD csatlakoztatva</h2>
-    <p>Csatlakoztasd az SD-kártyát, majd próbáld újra!</p>
+    <p>Csatlakoztassa az SD-kártyát, majd próbálja újra!</p>
     <button onclick="connectCard()">Újrapróbálkozás</button>
   </div>
 
@@ -289,7 +289,7 @@ async function connectCard() {
 
       if (handle.name.toUpperCase() !== "CARD") {
         disconnect();
-        alert("A kiválasztott kártya nem megfelelő!");
+        alert("A kiválasztott kártya nem megfelelő");
         return;
       }
 
@@ -345,7 +345,7 @@ async function connectCard() {
       disconnect();
       alert(
         "A Firefox nem adott mappaútvonalat. " +
-        "Próbálj friss Firefox-verziót használni."
+        "Próbálon friss Firefox-verziót használni."
       );
       return;
     }
@@ -356,7 +356,7 @@ async function connectCard() {
 
     if (roots.length !== 1 || roots[0] !== "CARD") {
       disconnect();
-      alert("A kiválasztott kártya nem megfelelő!");
+      alert("A kiválasztott kártya nem megfelelő");
       return;
     }
 
@@ -427,7 +427,7 @@ function disconnect() {
 
   search.value = "";
   search.disabled = true;
-  search.placeholder = "Csatlakoztasd a CARD-ot!";
+  search.placeholder = "Csatlakoztassa a CARD-ot!";
 
   document.getElementById("searchBtn").disabled = true;
 
